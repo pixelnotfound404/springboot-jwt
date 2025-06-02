@@ -9,9 +9,11 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.sql.Timestamp;  // Fixed: was java.security.Timestamp
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 @Accessors(chain = true)
 @Data
@@ -32,6 +34,8 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+
+
     @CreationTimestamp
     @Column(updatable = false, name = "created_at")
     private Date createdAt;
@@ -39,6 +43,9 @@ public class User implements UserDetails {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private Date updatedAt;
+
+    @Column(name = "is_verified", nullable = false)
+    private boolean verified = false;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -51,8 +58,9 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return fullName;
+        return email;
     }
+
 
 
     @Override
@@ -74,5 +82,6 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
 
 }

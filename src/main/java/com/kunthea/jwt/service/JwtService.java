@@ -1,26 +1,36 @@
 package com.kunthea.jwt.service;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
+
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
+
 @Service
 public class JwtService {
-    @Value("${security.jwt.secret-key}")
+    @Value("${spring.jwt.secret-key}")
     private String secretKey;
 
-    @Value("${security.jwt.expiration-time}")
+    @Value("${spring.jwt.expiration-time}")
     private long jwtExpiration;
 
     public String extractUsername(String token) {
