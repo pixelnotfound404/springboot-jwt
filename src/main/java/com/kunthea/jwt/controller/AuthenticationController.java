@@ -7,6 +7,7 @@ import com.kunthea.jwt.entity.User;
 import com.kunthea.jwt.service.AuthenticationService;
 import com.kunthea.jwt.service.JwtService;
 import com.kunthea.jwt.service.otpService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -69,5 +70,25 @@ public class AuthenticationController {
                 .setExpiresIn(jwtService.getExpirationTime());
 
         return ResponseEntity.ok(loginResponse);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+
+
+            jwtService.blacklistToken(token);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Successfully logged out"
+            ));
+        }
+
+        return ResponseEntity.badRequest().body(Map.of(
+                "error", "No valid token found"
+        ));
     }
 }
