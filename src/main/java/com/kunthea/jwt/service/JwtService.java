@@ -15,6 +15,8 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.slf4j.Logger;
@@ -27,11 +29,16 @@ import jakarta.annotation.PostConstruct;
 
 @Service
 public class JwtService {
+    private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
+
     @Value("${spring.jwt.secret-key}")
     private String secretKey;
 
     @Value("${spring.jwt.expiration-time}")
     private long jwtExpiration;
+
+    // Use ConcurrentHashMap for thread safety
+    private final Set<String> blacklistedTokens = ConcurrentHashMap.newKeySet();
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -70,8 +77,29 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
+        // First check if token is blacklisted
+        if (isTokenBlacklisted(token)) {
+            return false;
+        }
+
+        // Your existing validation logic
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+    }
+
+    /**
+     * Add token to blacklist
+     */
+    public void blacklistToken(String token) {
+        blacklistedTokens.add(token);
+        logger.info("Token added to blacklist");
+    }
+
+    /**
+     * Check if token is blacklisted
+     */
+    public boolean isTokenBlacklisted(String token) {
+        return blacklistedTokens.contains(token);
     }
 
     private boolean isTokenExpired(String token) {
@@ -94,5 +122,26 @@ public class JwtService {
     private Key getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    /**
+     * Optional: Clean up expired tokens from blacklist periodically
+     * You can call this method using @Scheduled annotation
+     */
+    public void cleanupExpiredTokens() {
+        int initialSize = blacklistedTokens.size();
+        blacklistedTokens.removeIf(token -> {
+            try {
+                return isTokenExpired(token);
+            } catch (Exception e) {
+                // If we can't parse the token, remove it from blacklist
+                logger.warn("Removing unparseable token from blacklist: {}", e.getMessage());
+                return true;
+            }
+        });
+        int removedCount = initialSize - blacklistedTokens.size();
+        if (removedCount > 0) {
+            logger.info("Cleaned up {} expired tokens from blacklist", removedCount);
+        }
     }
 }
