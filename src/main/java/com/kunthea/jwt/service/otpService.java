@@ -21,7 +21,7 @@ public class otpService {
         this.emailService = emailService;
     }
 
-    public void generateAndSendOtp(User user) {
+    public String generateAndSendOtp(User user) {
 
         otpRepository.deleteByUser(user);
 
@@ -34,11 +34,10 @@ public class otpService {
 
         otpRepository.save(otp);
 
-        // For testing - log to console
-        System.out.println("Generated OTP for " + user.getEmail() + ": " + otpCode);
 
 
         emailService.sendOtpEmail(user.getEmail(), otpCode);
+        return otpCode;
     }
 
     public boolean verifyOtp(User user, String otpCode) {

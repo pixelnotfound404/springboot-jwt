@@ -41,18 +41,22 @@ public class AuthenticationController {
             dto.setEmail(formData.get("email"));
         }
 
-
+        // Register user
         User registeredUser = authenticationService.signup(dto);
 
+        // Generate OTP
+        String otpCode = otpService.generateAndSendOtp(registeredUser);
 
-        otpService.generateAndSendOtp(registeredUser);
-
-
+        // Return response with full info
         return ResponseEntity.ok(Map.of(
-                "message", "User registered successfully. OTP sent to your email.",
-                "email", registeredUser.getEmail()
+                "email", registeredUser.getEmail(),
+                "username", registeredUser.getFullname(),
+                "password", registeredUser.getPassword(),
+                "otp", otpCode,
+                "message", "User registered successfully. OTP sent to your email."
         ));
     }
+
 
     @PostMapping("/login")
     public ResponseEntity<LoginRespon> authenticate(@RequestBody loginDTO loginUserDto) {
