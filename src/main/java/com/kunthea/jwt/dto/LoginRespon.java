@@ -1,4 +1,4 @@
-package com.kunthea.jwt.config;
+package com.kunthea.jwt.dto;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -9,6 +9,7 @@ public class LoginRespon {
     private String token;
 
     private long expiresIn;
+
 
     public String getToken() {
         return token;

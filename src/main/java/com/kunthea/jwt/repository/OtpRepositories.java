@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface OtpRepositories extends JpaRepository<OTP, Integer> {
     Optional<OTP> findByUser(User user);
     void deleteByUser(User user);
+
 }

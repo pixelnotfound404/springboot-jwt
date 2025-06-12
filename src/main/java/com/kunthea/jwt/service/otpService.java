@@ -7,6 +7,7 @@ import com.kunthea.jwt.util.OtpGenerator;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class otpService {
@@ -41,13 +42,24 @@ public class otpService {
     }
 
     public boolean verifyOtp(User user, String otpCode) {
-        return otpRepository.findByUser(user)
-                .filter(otp -> otp.getOtpCode().equals(otpCode))
-                .filter(otp -> otp.getExpiryDate().isAfter(LocalDateTime.now()))
-                .map(otp -> {
-                    otpRepository.delete(otp);
-                    return true;
-                })
-                .orElse(false);
+        Optional<OTP> otpOptional = otpRepository.findByUser(user);
+
+        if (otpOptional.isEmpty()) {
+            System.out.println("No OTP found for user");
+            return false;
+        }
+
+        OTP storedOtp = otpOptional.get();
+
+        boolean isExpired = storedOtp.getExpiryDate().isBefore(LocalDateTime.now());
+        boolean codesMatch = storedOtp.getOtpCode().equals(otpCode);
+
+        if (codesMatch && !isExpired) {
+            otpRepository.delete(storedOtp);
+            return true;
+        }
+
+        return false;
     }
+
 }
